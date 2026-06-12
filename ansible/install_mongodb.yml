@@ -1,0 +1,27 @@
+---
+- name: Install MongoDB on Private Server
+  hosts: db
+  become: yes
+
+  tasks:
+    - name: Create MongoDB repo file
+      copy:
+        dest: /etc/yum.repos.d/mongodb-org-7.0.repo
+        content: |
+          [mongodb-org-7.0]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/amazon/2023/mongodb-org/7.0/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://pgp.mongodb.com/server-7.0.asc
+
+    - name: Install MongoDB
+      dnf:
+        name: mongodb-org
+        state: present
+
+    - name: Start MongoDB
+      systemd:
+        name: mongod
+        state: started
+        enabled: yes

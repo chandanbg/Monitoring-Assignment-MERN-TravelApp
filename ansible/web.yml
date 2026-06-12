@@ -1,0 +1,43 @@
+- name: Setup Web Server
+  hosts: web
+  become: yes
+
+  vars_files:
+    - vault.yml
+
+  tasks:
+
+    - name: Install required packages
+      dnf:
+        name:
+          - git
+          - nodejs
+        state: present
+
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Clone MERN repository
+      git:
+        repo: https://github.com/rajeshpawar012/TravelMemory-Terraform-Ansible.git
+        dest: /home/ec2-user/app
+        version: main
+        force: yes
+
+    - name: Install backend dependencies
+      command: npm install
+      args:
+        chdir: /home/ec2-user/app/backend
+
+    - name: Create backend .env file
+      template:
+        src: templates/backend.env.j2
+        dest: /home/ec2-user/TravelMemory-Terraform-Ansible/backend/.env
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+
+    - name: Restart backend with updated env
+      shell: pm2 restart travelmemory-backend --update-env

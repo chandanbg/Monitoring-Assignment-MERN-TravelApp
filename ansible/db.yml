@@ -1,0 +1,41 @@
+- name: Secure MongoDB Server
+  hosts: db
+  become: yes
+
+  vars:
+    mongo_admin_user: admin
+    mongo_admin_pass: Admin@123
+    mongo_app_user: traveluser
+    mongo_app_pass: Travel@123
+    mongo_db_name: travelmemory
+
+  tasks:
+
+    - name: Ensure MongoDB repo exists
+      copy:
+        dest: /etc/yum.repos.d/mongodb-org-6.0.repo
+        content: |
+          [mongodb-org-6.0]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/amazon/2023/mongodb-org/6.0/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-6.0.asc
+
+    - name: Install MongoDB
+      dnf:
+        name: mongodb-org
+        state: present
+
+    - name: Enable MongoDB authentication
+      lineinfile:
+        path: /etc/mongod.conf
+        regexp: '^#?security:'
+        line: 'security:\n  authorization: enabled'
+        create: yes
+
+    - name: Restart MongoDB
+      systemd:
+        name: mongod
+        state: restarted
+        enabled: yes
